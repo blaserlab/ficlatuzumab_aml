@@ -1,0 +1,67 @@
+---
+title: "Update 7/30/2020"
+author: "Brad Blaser"
+date: "7/30/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## AML blast markers
+
+Additional markers to show typical AML gene expression in the clusters we have selected to work with:
+
+
+```{r dev='png', dpi=300}
+aml_marker_plot
+```
+
+## HGF expression
+
+Lots of options here.  I will save what I think is best for last
+
+HGF expression in Blast1, Blast2 and MHCII+ cells, stratified by treatment day and response, presented on a linear scale.  This shows that there are many more cells in the NR that are expressing HGF, and especially in the later timepoints, the expression values in those cells tend to be higher:
+
+```{r dev='png', dpi=300}
+hgf_violin_faceted_linear
+```
+
+Same cells presented on a log scale with a pseudocount = 1.  To me this looks about the same:
+
+```{r dev='png', dpi=300}
+hgf_violin_faceted_pseudo
+```
+
+Same cells presented without a pseudocount.  Here the log function makes all cells with expression of zero drop out since log(0) = -Inf.  This lets you see more of what is going on in the cells expressing HGF but doesn't show how many cells aren't expressing HGF.
+
+```{r dev='png', dpi=300}
+hgf_violin_faceted_log
+```
+
+Instead of these I favor making a dotplot similar to above, but in this case stratified by cluster, treatment day and response and showing only 1 gene:
+
+```{r dev='png', dpi=300}
+hgf_dot_plot
+```
+
+Univariate regression for comparisons between CR and NR across all three clusters were 
+
+```{r}
+
+hgf_regression_res[[1]]$coefficients[,4][2]# Day 0
+hgf_regression_res[[2]]$coefficients[,4][2]# Day 1
+hgf_regression_res[[3]]$coefficients[,4][2]# Day 2
+hgf_regression_res[[4]]$coefficients[,4][2]# Day 3
+hgf_regression_res[[5]]$coefficients[,4][2]# Day 42-44
+
+
+```
+
+
+## Conclusion
+
+I think the dot plots are the way to go for the single gene comparisons.  Thanks Ravi.  They nicely show proportion expressing and expression levels.  We can see how the violins look for aggregate gene exprelssion, but as long as people are OK with not seeing data from individual cells in the jitter plots, then the dot plots will be a more compact way to show the data.
+
+Will work on redoing the gene modules tomorrow.  I anticipate not much change from prior. 

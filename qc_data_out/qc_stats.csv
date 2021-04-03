@@ -1,0 +1,11 @@
+channel,qc.detected.sum,qc.mito.sum,qc.any.sum
+blue1,0,272,272
+blue2,0,234,234
+cyan1,0,177,177
+cyan2,0,225,225
+green1,1,82,83
+green2,3,64,67
+red1,0,211,211
+red2,0,222,222
+yellow1,0,199,199
+yellow2,0,149,149

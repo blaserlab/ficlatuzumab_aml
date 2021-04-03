@@ -1,0 +1,149 @@
+---
+title: "Project Update"
+author: "Brad Blaser"
+date: "8/15/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Background
+
+I've started to put together some figures for the scrnaseq part.  I'm just starting with figure 1 but we can adjust when the paper comes together.
+
+## Fig 1
+
+Cell type identification by expression of specific markers.
+
+### Fig 1A
+
+UMAP representation of all cells (N = 103,415) in the final dataset after filtering for doublets and low-quality cells and batch correction according to patient identity.  Each patient is represented by a different color.
+
+### Fig 1B
+
+UMAP representation of all cells in the final dataset after clustering using the partitioning method.  Cell clusters were identified by inspection of top markers according to their Jensen-Shannon divergence.
+
+### Fig 1C
+
+Selected top cluster markers.
+
+### Fig 1D
+
+Expression of AML blast markers by cell cluster.
+
+```{r, dev='png', fig.width=7.5, fig.height=8, dpi=300}
+fig1
+```
+
+## Supplemental Fig 1
+
+### Supplemental Fig 1A
+
+UMAP representation of all cells prior to batch correction.
+
+### Supplemental Fig 1B
+
+UMAP representation of all cells prior to batch correction.  Colors represent cluster assignments performed after batch correction according to patient identity.
+
+### Supplemental Fig 1C
+
+Representation within cell clusters according to patient identity and treatment day. Color scale within each cell represents the log10-transformed percent of each cluster represented by that sample.  Row totals are each equal to 100 percent. 
+
+```{r, dev='png', fig.width=7.5, fig.height=7.5, dpi=300}
+sup_fig1
+```
+
+
+## Fig2
+
+Differential gene expression.
+
+### Fig 2A
+
+Expression of HGF by cell clusters, stratified by treatment day and response to ficlatuzumab.
+
+### Fig 2B
+
+Expression of CSF1R by cell clusters, stratified by treatment day and response to ficlatuzumab.
+
+### Fig 2C
+
+Day 0 myeloid cell clusters (Early blasts, HLA-DR+, and Late Blasts) were identified and differential gene expression was performed using pseudobulk analysis (DESeq2).  HGF, CSF1R and selected genes are indicated.  Genes with FDR-adjusted p values less than 0.1 are indicated in red.
+
+### Fig 2D
+
+Day 42-44 myeloid cell clusters were identified and pseudobulk analysis was performed as in 2C.
+
+```{r, dev='png', fig.width=7.5, fig.height=6, dpi=300}
+fig2
+```
+
+## Supplemental Fig 2
+
+UMAP representation of expression of selected genes.
+
+### Supplemental Fig 2A
+
+HGF expression stratified by treatment day and response to ficlatuzumab.  Colors represent log10-transformed, size-factor normalized expresison prior to performing batch correction. 
+
+### Supplemental Fig 2B
+
+CSF1R expression stratified by treatment day and response to ficlatuzumab.  Colors represent log10-transformed, size-factor normalized expresison prior to performing batch correction. 
+
+```{r, dev='png', fig.width=7.5, fig.height=6, dpi=300}
+sup_fig2
+```
+
+## Fig 3
+
+Gene module analysis identifies viral response and protein translation genes as potential biomarkers of resistance to ficlatuzumab.
+
+### Fig 3A
+
+Gene modules were identified by unsupervised analysis.  Expression of module genes according to treatment day and response to ficlatuzumab is shown.
+
+### Fig 3B
+
+Aggregated counts for module 7 genes in responders and non-responders on each treatment day are shown.
+
+### Fig 3C
+
+Gene Ontology terms enriched in module 7 genes.
+
+### Fig 3D
+
+Aggregated counts for module 18 genes in responders and non-responders on each treatment day are shown.
+
+### Fig 3E
+
+Gene Ontology terms enriched in module 18 genes.
+
+```{r, dev='png', fig.width=7.5, fig.height=10, dpi=300}
+fig3
+```
+
+
+## Cytof-scRNAseq correlation
+
+I put together an initial figure based on the data you sent me, Vicki.  This is not what we talked about doing with Jimmie.  What you sent me is average expression of a set of markers in CD33, CD34, T and B cells.  What we talked about was comparing numbers of these cells between the two methods.  So I think it would still be worth trying the latter.  
+
+What I did here was stratify the scRNAseq data according to CD33, CD34, T and B cells.  Then I identified mRNA correlates for the indicated cytof markers.  I threw out all of the phospho markers.  Then I generated a correlation matrix:  
+
+
+```{r, dev='png', fig.width=7.5, fig.height=7.5, dpi=300}
+cytof_scrnaseq_plot
+```
+
+You can see that there are a few clusters of correlated genes.  From top left to bottom right I would say there is a T cell group, a myeloid group, some small clusters like 154Sm_CD45/PTPRC, 148Nd_CD34/CD34, 149Sm_CD25/IL2RA that match up nicely and then a B cell group.  Overall I think this shows reasonably good correlation between protein and RNA, but I'm not sure it is easy to point this out to the reader.  I'm open to suggestions on how to improve.
+
+## Conclusion
+
+Let me know if you have any comments on the figures. All figures are in compressed format for now.  If you want to mark up the PDF in acrobat that is probably easiest.
+
+I have stats for most of the obvious comparisons here which we can either include in the text or add into the figures.  By and large the stats look as you would expect.
+
+Thanks!
+
+Brad

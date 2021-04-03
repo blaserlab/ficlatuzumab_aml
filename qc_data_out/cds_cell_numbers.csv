@@ -1,0 +1,6 @@
+cell_number,user_friendly,cds,difference
+175667,starting number of cells,cds0,0
+175403,after removing cells with no freemuxlet data,cds2,264
+105363,after removing inter- and intra-patient doublets,cds2.1,70040
+105254,after removing freemuxlet ambiguous cells,cds2.2,109
+103415,final dataset after removing low qualtiy cells,cds6,1839

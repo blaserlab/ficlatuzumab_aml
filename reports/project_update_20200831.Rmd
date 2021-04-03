@@ -1,0 +1,135 @@
+---
+title: "Project Update"
+author: "Brad Blaser"
+date: "8/31/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Fig 1
+
+Cell type identification by expression of specific markers.
+
+### Fig 1A
+
+UMAP representation of all cells (N = 103,415) in the final dataset after filtering for doublets and low-quality cells and batch correction according to patient identity.  Each patient is represented by a different color.
+
+### Fig 1B
+
+UMAP representation of all cells in the final dataset after clustering using the partitioning method.  Cell clusters were identified by inspection of top markers according to their Jensen-Shannon divergence.
+
+### Fig 1C
+
+Selected top cluster markers.
+
+### Fig 1D
+
+Expression of AML blast markers and canonical lymphocyte markers by scRNA-seq cell cluster.
+
+```{r, dev='png', fig.width=7.5, fig.height=8, dpi=300}
+fig1
+```
+
+## Supplemental Fig 1
+
+### Supplemental Fig 1A
+
+UMAP representation of all cells prior to batch correction.
+
+### Supplemental Fig 1B
+
+UMAP representation of all cells prior to batch correction.  Colors represent cluster assignments performed after batch correction according to patient identity.
+
+### Supplemental Fig 1C
+
+Representation within cell clusters according to patient identity . Color scale within each cell represents the log10-transformed percent of each cluster represented by that sample.  Row totals are each equal to 100 percent. 
+
+```{r, dev='png', fig.width=5.5, fig.height=10, dpi=300}
+sup_fig1
+```
+
+
+## Fig2
+
+Differential gene expression.
+
+### Fig 2A
+
+Expression of HGF by cell clusters, stratified by treatment day and response to ficlatuzumab.
+
+### Fig 2B
+
+Expression of CSF1R by cell clusters, stratified by treatment day and response to ficlatuzumab.
+
+### Fig 2C
+
+Day 0 myeloid cell clusters (Early blasts, HLA-DR+, and Late Blasts) were identified and differential gene expression was performed using pseudobulk analysis (DESeq2).  HGF, CSF1R and selected genes are indicated.  Genes with FDR-adjusted p values less than 0.05 and log2fc greater than 1.5 are indicated in red.
+
+### Fig 2D
+
+Day 42-44 myeloid cell clusters were identified and pseudobulk analysis was performed as in 2C.
+
+```{r, dev='png', fig.width=7.5, fig.height=6, dpi=300}
+fig2
+```
+
+## Supplemental Fig 2
+
+UMAP representation of expression of selected genes.
+
+### Supplemental Fig 2A
+
+HGF expression stratified by treatment day and response to ficlatuzumab.  Colors represent log10-transformed, size-factor normalized expresison prior to performing batch correction. 
+
+### Supplemental Fig 2B
+
+CSF1R expression stratified by treatment day and response to ficlatuzumab.  Colors represent log10-transformed, size-factor normalized expresison prior to performing batch correction. 
+
+```{r, dev='png', fig.width=7.5, fig.height=6, dpi=300}
+sup_fig2
+```
+
+## Fig 3
+
+Gene module analysis identifies viral response and protein translation genes as potential biomarkers of resistance to ficlatuzumab.
+
+### Fig 3A
+
+Gene modules were identified by unsupervised analysis.  Expression of module genes according to treatment day and response to ficlatuzumab is shown.
+
+### Fig 3B
+
+Aggregated counts for module 7 genes in responders and non-responders on each treatment day are shown.
+
+### Fig 3C
+
+Gene Ontology terms enriched in module 7 genes.
+
+### Fig 3D
+
+Aggregated counts for module 18 genes in responders and non-responders on each treatment day are shown.
+
+### Fig 3E
+
+Gene Ontology terms enriched in module 18 genes.
+
+```{r, dev='png', fig.width=7.5, fig.height=10, dpi=300}
+fig3
+```
+
+
+## Cytof-scRNAseq correlation
+
+I remade the heatmap according to Ravi's suggestions.  
+
+The data are essentially the same.  I just reshaped the plot putting scRNAseq and cytof markers on different axes.  I removed the duplicate comparisons you get in a typical correlation matrix.  I also removed HLA-DR and CD45 since they are not specific in either method and screwed up the clustering.
+
+The annotation blocks require some explanation.  Greg provided cytof mean expression data for CD34, CD33, T and B cell clusters.  I generated corresponding aggregate cell groups based on expression of CD33 or CD34 as single genes or based on the well-defined T and B cell clusters.  Then I generated an aggregate gene expression score for the markers shown here within each of those groups.  Clustering was performed with k = 4 which seemed to fit nicely.  Then I reapplied the annotation labels post-hoc.  Hopefully that makes sense.  I also trimmed the cytof marker labels to make them more readable. 
+
+```{r, dev='png', fig.width=7.5, fig.height=6, dpi=300}
+cytof_scrnaseq
+```
+

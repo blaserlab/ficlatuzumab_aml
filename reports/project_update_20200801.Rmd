@@ -1,0 +1,56 @@
+---
+title: "Update August 1 2020"
+author: "Brad Blaser"
+date: "8/1/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+
+This report addresses comments from Vicki on 7/31.  See Readme blog for detailed responses.
+
+## UMAP plot of HGF expression in the trimmed cell data set.  
+
+As a reminder, trimming was done by performing batch correction on the original dataset and identifying clusters of cells with poor representation across all samples and timepoints.  Red cells also removed.  What is shown here is the cells in their original configuration after trimming out these outliers.  I feel like this is legitimate as long as it is explained.  
+
+In terms of this plot, I think we can include it in the supplement.
+
+```{r dev='png', dpi=300,fig.height=3, fig.width=7.5}
+hgf_faceted
+```
+
+## Dot plot of HGF expression including B and T cells
+
+```{r dev='png', dpi=300}
+hgf_dot_plot_BT
+```
+
+
+## Alternative to partition heatmap
+
+```{r dev='png', dpi=300, fig.height=10, fig.width= 7.5}
+aligned_umap_sample
+```
+
+
+
+## Heatmap of top 50 genes expressed in each of the aligned clusters
+
+We can pick a few genes from "data_out/partition_markers_aligned.csv" and add them in by hand if this is what you want.
+
+
+```{r dev='png', dpi=300}
+aligned_partition_heatmap
+```
+
+## Added CDK6 to the partition dot plot
+
+We can add 1 or two more genes, but remember this will be compressed in the final figures.
+
+```{r dev='png', dpi=300}
+marker_gene_plot
+```

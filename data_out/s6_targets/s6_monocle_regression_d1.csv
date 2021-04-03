@@ -1,0 +1,13 @@
+gene_short_name,term,q_value,estimate
+RRP12,responseNR,1.212e-14,-0.6729062
+GAR1,responseNR,2.013e-13,0.522419
+EIF4EBP1,responseNR,1.26e-11,-0.2442778
+DDX18,responseNR,2.439e-10,-0.2107287
+RRP15,responseNR,1.136e-7,0.5206478
+EIF4B,responseNR,4.326e-6,0.1327346
+NOP56,responseNR,0.02712,0.1444366
+POLDIP3,responseNR,0.245,-0.1571344
+EEF2K,responseNR,0.3068,0.325137
+NOP14,responseNR,0.369,0.1250369
+RRP9,responseNR,0.6,0.142409
+PWP2,responseNR,0.718,-0.0548963

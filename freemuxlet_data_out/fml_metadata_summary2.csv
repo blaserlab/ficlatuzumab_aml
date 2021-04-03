@@ -1,0 +1,5 @@
+doubletCalls,total,user_friendly
+DoubletFinder.DBL,9253,Intra-patient doublets
+Freemuxlet.DBL,60787,Inter-patient doublets
+no freemuxlet data or ambiguous,264,no freemuxlet data or ambiguous
+Singlet,105363,Singlets

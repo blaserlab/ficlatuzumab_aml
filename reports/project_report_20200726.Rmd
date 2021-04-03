@@ -1,0 +1,258 @@
+---
+title: "Ficlatuzumab/AML Project"
+author: "Brad Blaser"
+date: "7/26/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Overview
+
+This is a summary of the single cell analysis performed after demultiplexing with Freemuxlet.  
+
+In general, the results are very consistent with what we had previously submitted.  The analysis parameters are very similar to what was done before i.e. we didn't have to force anything to make the results come out the same.  This is good.  
+
+The bulk of the analysis was performed using Monocle3 functions with occasional modifications as noted. 
+
+If you are interested in browsing the code, here is what is in each file:
+
+* 01_load_data.R - loads individual 10X cell ranger objects from our network drive
+* 02_freemuxlet.R - loads freemuxlet cell-level data, freemuxlet cluster-pt ID assignments from Ravi, and Sample run - Patient - timepoint relationships from Vicki.  These data are combined through a series of joins with the main single cell data object (cds).  This identifies singlets, doublet finder doublets, and freemuxlet doublets.  A detailed table of this data is generated.  The main cds is filtered to include singlets only.
+* 03_qc.R - performs basic qc using functions in scater.  Cells more than 3 MADs away from the median in terms of number of features (genes) detected (in the lower direction) or percent mitochondrial genes (in the higher direction) are discarded.  Stats and diagnostic plots are generated.  This was about 1% of cells overall.  QC functions were performed on the basis of sequencing run (e.g. "cyan1").
+* 04_memory_management.R - this saves the preliminary data objects from scripts 01-03 in a separate data object (ficlatuzumab_freemuxlet_01_to_03.RData, ~2.1 GB) to reduce memory overhead and save times.  Subsequent data is stored in ficlatuzumab_memory_managed.RData (~3.1 GB).
+* 05_dim_reduction.R - performs PCA calculation and dimension reduction with umap to produce the main cds object for the rest of the analysis.  Previsualization plots with and without batch correction are generated.  T and B cells aligned well prior to batch reduction (batchelor/Monocle3).  Batch correction only reduced myeloid cell heterogeneity, which I feel is counterproductive, so this was not pursued further.
+* 06_clustering.R - clustering was performed using the Leiden and Partitioning methods.  Partitions provided sufficient resolution for our purposes, so these were used exclusively.  Top Markers were generated using Jensen-Shannon specificity and logistic regression.  Partition assignments were almost identical to the prior submission except that the myelomonocytic cluster got split into 2, which was not really a problem.
+* 07_gene_modules.R - gene modules were identified in a similar fashion as before.  Using the default sensitivity settings, there are many fewer modules than before.  Not sure why.  This masked the inflammatory signature.  I made a slight tweak to increase the sensitivity of module detection and they came out as module 14.  
+* 08_ revigo.R - these are rough bubble plots of semantic terms from the gorilla analysis.  May not be usable (see below).
+* 09_regression.R - performed standard regression analysis on module genes and generated top gene lists.
+* 10_regresssion_mod14.R - generated an aggregate module14 gene score per cell by summing the log-transformed, size factor-corrected count data for each module 14 gene.  This is analougous to what monocle does to generate the heat maps.  Then logistic regression (quasipoisson) is used on the aggregate module 14 score using response (CR vs NR) as the outcome with patient ID (VWsample) as a covariate.  These tests are performed on day 0 and day 42-44 only.
+* 11_survival analysis.R - recreated the K-M plots in case Vicki wants to use them in the paper.  The package I use generates the Number at risk tables that the reviewers wanted.
+* plot_staging.R - script for generating plots for this report.  These objects will be used to compose final figures for the resubmission.
+
+
+## Data Preprocessing
+
+These are the number of cells identified from the first level of freemuxlet analysis:
+```{r, echo=FALSE}
+print(fml_metadata_summary1 %>% arrange(desc(doubletCalls)),n = 20)
+```
+
+The FNL.BEST.GUESS corresponds to the cluster assignment provided directly by freemuxlet.  See "freemuxlet_data_out/fml_metadata_summary1.csv"
+
+After incorporating Ravi's genotyping information, the singlets were assigned to the patient id's we are familiar with (see "freemuxlet_data_out/singlet_only_summary.csv":
+
+```{r echo=FALSE}
+print(singlet_only_summary, n = 12)
+```
+
+QC was performed to remove cells with a low number of features or genes, and a high percentage of mitochondrial RNA.  Cutoffs were determined using the defaults for the "isOutlier" function in scater which is 3 MADs in the bad direction.  Each calculation was performed on individual 10X runs (e.g. "cyan1").  
+
+Distibution of features prior to thresholding:
+
+```{r dev='png', dpi=300}
+channels_nfeature_rna_cds5
+```
+Feature thresholds applied:
+
+```{r}
+qc_thresholds_features
+```
+
+Distribution of features after thresholding:
+```{r dev='png', dpi=300}
+channels_nfeature_rna_cds6
+```
+
+Distribution of mitochondrial RNA percentage prior to thresholding:
+
+```{r dev='png', dpi=300}
+channels_pct_counts_mito_cds5
+```
+
+
+```{r}
+qc_thresholds_mito
+```
+
+
+Distribution of mitochondrial RNA percentage after thresholding:
+
+```{r dev='png', dpi=300}
+channels_pct_counts_mito_cds6
+```
+
+These show that the cells were good quality basically across the board.  I broke it down by patient and the results were very similar.  I can send those plots if you are interested.
+
+The following is a table of cds cell numbers at all steps of preprocessing:
+
+```{r}
+cds_cell_numbers
+```
+
+So in summary, there were many cells filtered out by freemuxlet and doublet finder.  About 1% of cells failed qc.
+
+CSVs with these data can be found in the freemuxlet_data_out and qc_data_out folders in the repository.
+
+## Dimension Reduction
+
+Using standard PCA calculations and UMAP dimension reduction we get something very similar to what we had before:
+
+```{r dev='png', dpi=300}
+cds_previz
+
+```
+
+Performing batch correction gives us this:
+
+```{r dev='png', dpi=300}
+cds_aligned_previz
+
+```
+
+Basically the T cells look almost the same, so the major effects are to reduce the variability in the myelod blast cells.  I don't think this is what we want to do so I proceeded with the non-batch-corrected data.
+
+## Clustering
+
+As described in the overview, clustering was performed using Leiden and Paritioning methods with default Monocle settings.  Top Markers are available in "data_out/partition_markers.csv".  They are almost identical as before.  The only thing was that the large cluster of blasts from patient 1 got put in their own cluster this time.  This really doesn't affect our results.  
+
+Here are selected top markers.  I think something like this would look good for the paper:
+
+```{r dev='png', dpi=300}
+marker_gene_dotplot
+
+```
+
+I think this can take the place of the single UMAP scatter plots for the most part.
+
+Here are the UMAP plots with partition assignments overlaid and colors according to response:
+
+```{r dev='png', dpi=300}
+all_cells_by_response
+
+```
+
+Here are all cells colored by patient:
+
+```{r dev='png', dpi=300}
+all_cells_by_pt
+
+```
+
+Both are basically identical to what we had before. 
+
+I think it would be worthwhile to specifically highlight AML blast genes like this:
+
+```{r dev='png', dpi=300}
+aml_blast_markers
+
+```
+
+Vicki:  if you send me the number of cells in each phenotypic category:  B, T, DC, Blast - identified by cytof, I can put together a correlation matrix.
+
+## HGF expression
+
+One important finding is that HGF expression seems to be higher in the NR versus the CR group.  I think it can be seen pretty well in this figure:
+
+```{r dev='png', dpi=300,fig.width=7, fig.height=3.5}
+hgf_faceted
+
+```
+
+The question came up whether HGF and CSF1R expression might be correlated and it looks like the latter is relatively stronger in the CR group, so I think the answer seems to be no from these data:
+
+
+```{r dev='png', dpi=300,fig.width=7, fig.height=3.5}
+csf1r_faceted
+
+```
+
+## Gene modules
+
+I don't know why but there were many fewer gene modules than before.  Fortunately the type1 IFN signal is still in there in module 14.  The mapk signal ended up in module 2 with a bunch of terminal neutrophil functions.
+
+Here is the module heatmap (myeloid blasts only):
+
+```{r dev='png', dpi=300}
+gene_module_rd
+
+```
+
+I think it is really clear that module 2 is down in the NR and module 14 is up, especially at d0 and d42-44.  So I think this is consistent with our prior story.  I don't think we need the other heatmap.
+
+I did the go term analysis with gorilla and revigo as I mentioned above.  I'm not happy with how these are being visualized so we may have to just mention the GO terms or select some and make a bar chart of the q values.  The problem is that the terms are very highly redundant and even these tools aren't able to make enough distinction between the two.  When I look at the processess and the genes underlying them, they are very different.  Module 14 are viral response genes and module 2 is all about neutrophil activation/degranulation and macrophage killing.
+
+I think a good comparison to make is at d0 and d42-44.  At these timepoints we can see what the cells are like before and after a full course of ficlatuzumab.  The intermediate timepoints are confounded by chemo/maybe not enough time with the ficlatuzumab etc.
+
+So I wanted to see what the aggregate expression of module 14 genes was at the single cell level.  Since the module function tells us that these cells are co-regulated across the whole dataset, it makes sense to me to look at them in this way.  Monocle generates this module heatmap but adding up the log-transformed, size factor-corrected counts for each gene in a given module for each cell.  Then it scales all of these values across all modules.  Then it takes the mean of each module value for an arbitrary group of cells and that is what the color is.
+
+So I just did the first steps manually and generated an aggregate module score for each cell in the myeloid blasts at d0 and d42-44. Here are these data:
+
+```{r dev='png', dpi=300}
+mod14_d0_agg_violin
+```
+
+
+
+```{r dev='png', dpi=300}
+mod14_d42_44_agg_violin
+
+```
+
+The p-values on these figures are calculated using wilcoxon's test.  Because there may be covariates that explain this difference indepenedent of response to ficlatuzumab, I performed regression analysis using the formula ~response + VWsample.  After removing the effect due to the VWsample (patient) variable, there was still a significant difference.
+
+This method helps with the zero-inflation problem you have when looking at single genes in isolation.  
+
+Ravi and Arjun previously had mentioned pseudobulk analysis in passing in one of our conversations.  The idea as I understand it is that the repeated measures involved in single cell overestimate differences between groups of cells and don't adequately account for biological variation between patients.  My personal opinion is that this is so rigorous as to be unhelpful in a study like this.  In fact if this is what you want to do, it would have been better to do actual bulk RNA seq, instead of single cell, but maybe I am way off base.  There weren't any signficantly different genes from module 14 when I did pseudobulk analysis.      
+
+I did generate lists of single genes using standard regression techniques which you can find in "data_out/response_patient_model_coefs_d0_sig.csv" and "...d_42-44_sig.csv".  I don't think these plots are particularly compelling because of gene dropout across so many diverse cells.  So maybe we won't show them.
+
+## Survival analysis
+
+Because the reviewers asked for it I went ahead and remade the survival figs.  They aren't perfect but do include the Number at Risk table:
+
+
+```{r dev='png', dpi=300}
+pfs_plot_fixed
+
+```
+
+```{r dev='png', dpi=300}
+os_plot_fixed
+
+```
+
+```{r dev='png', dpi=300}
+hsct_os_plot_fixed
+
+```
+
+The package I used randomly stamps the P value on there which is annoying.  When I make the PDF I should be able to move it around to get of off of the curves.
+
+
+## Conclusion
+
+Looks like we have addressed a lot of the concerns.  We should be able to quickly correlate the number of cells in the major cell types between cytof and scRNAseq and call it a day.  I don't think there needs to be much or any more harmonization than that.  
+
+Let me know if there are any other analyses you'd like to see.  Or any aesthetic changes.  I'll put all of my stuff in PDF format and then Vicki, you or I can composite all of the figures together for optimal readability.  
+
+Also if I left anything out or made any glaring errors, please let me know.  
+
+Thanks!!
+
+## Addendum July 27 2020
+
+Here is the gene module heatmap for all partitions:
+
+
+```{r dev='png', dpi=300}
+gene_module_p_a_r
+```
+
+Here is the gene module heatmap for just the blast cells only at d0 and d42-44
+```{r dev='png', dpi=300}
+gene_module_rd_0_42_44
+
+```

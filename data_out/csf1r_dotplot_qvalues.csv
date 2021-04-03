@@ -1,0 +1,6 @@
+stratification,formula,term,estimate,p_value,q_value
+0,~response+aligned_partition,responseNR,0.78236614300791,2.47455861728264e-86,2.47455861728264e-86
+1,~response+aligned_partition,responseNR,0.362020902323212,3.52335638568349e-19,3.52335638568349e-19
+2,~response+aligned_partition,responseNR,-0.17554982530557,0.0227283370940475,0.0227283370940475
+3,~response+aligned_partition,responseNR,-0.269460959352979,9.64955559613454e-4,9.64955559613454e-4
+42-44,~response+aligned_partition,responseNR,-0.0972636648961005,0.0348541268955115,0.0348541268955115

@@ -1,0 +1,76 @@
+---
+title: "Updates on Batch Correction"
+author: "Brad Blaser"
+date: "7/29/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Background 
+
+I'm going to try to make more frequent updates with less commentary so we can iterate through the figures more quickly.  I think we are pretty much on the same page following our call last night.
+
+## Batch correction for partition assignment
+
+This is the cds following demultiplexing and qc/removal of low-quality cells.  Basically where we left off last time.
+
+```{r dev='png',dpi=300}
+cds_cp_plot
+```
+
+Here is partitioning performed on the data which has been batch corrected for the patient variable, VWsample:
+
+```{r dev='png',dpi=300}
+cds_cp_plot_aligned
+```
+
+Here is the percent of cells in each cluster stratified by sample.  This will tell us how balanced the clusters are and whether some might be artifactual, arising from a bad cryovial for example:
+
+
+
+```{r dev='png',dpi=300,fig.width=7.5, fig.height=3}
+cluster_heatmap
+```
+
+Looks like the B/PC cluster is not well-represented.  The dividing cluster is very small and not well represented.  Also lets remove the erythrocytic cells since they are likely RBCs (if marrow, we might debate more about whether they are erythrocyte progenitor or precursors, but this is blood.)  
+
+We already know that Blast 2 is highly enriched for patient E03, but here we see that all of the other samples are represented, so we should keep it.  
+
+This is the original, uncorrected UMAP plot after removing these clusters.  Colors here represent the partitions defined after alignment:
+
+```{r dev='png',dpi=300}
+cds_cp_plot_partitions_aligned
+```
+
+So it looks like this cleaned things up a bit.  We have less clusters to deal with.  Basically 3 leukemic clusters plus b and t cells.
+
+We will also need to present the cleaned up dataset by patient as we had before:
+```{r dev='png',dpi=300}
+plot_by_patient
+```
+
+
+## Marker gene plots
+
+Now we can simplify the marker gene plot to things people will know.  These are selected from the top markers in each of the aligned clusters based on pseudo R2.  Gene expression data is derived from batch-uncorrected data:
+
+```{r dev='png'}
+marker_gene_plot
+```
+
+## Conclusion
+
+Please send me your comments, especially on the logical flow of the figures.  Some of the purely aesthetic stuff will necessarily change when things get scaled down for the final figures and we can adjust more then.
+
+One thought I had for linking these clusters to published data sets is just to make an aggregate gene score, like I did to make the aggregate gene module violin plots, and then plot the aggregate score as dot plots like we did for the single genes in the cluster assignment. 
+
+This is going to be better than using a Venn diagram to show overlap.  We could also do a reverse GSEA using cluster top markers as the gene sets and find some AML gene expression dataset, but I think the aggregate score will be cleaner. I've seen this approach in a few papers, though I don't exactly know how it has been implemented without looking.
+
+Vicki, could you pick out some gene sets from Broad or other sources?  If you give me a list of gene names, it will be easy for me to plug these into functions I have already written.
+
+Thanks,
+
+Brad

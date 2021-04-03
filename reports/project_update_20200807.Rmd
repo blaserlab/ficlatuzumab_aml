@@ -1,0 +1,244 @@
+---
+title: "Project Report"
+author: "Brad Blaser"
+date: "8/7/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Responses to questions and comments
+
+### Question
+
+Heatmap showing the percent of cells in each cluster stratified by sample: just to confirm, the sum of rows is 100%, right?
+
+### Response
+
+Correct, the sum of the rows is 100%.  Here is the first version I made:
+
+```{r dev='png', dpi=300}
+cluster_heatmap
+```
+
+And here is the same thing plotted with colors representing percent of maxiumum in each row:
+
+```{r dev='png', dpi=300}
+cluster_heatmap_percent_max
+```
+
+### Question
+
+Are we happy with the clustering after batch correction? What is the batch in your batch correction analysis?
+
+### Response
+
+I used this line of code to do batch correction:
+
+```
+cds_aligned <- align_cds(cds = cds_preprocess, alignment_group = "VWsample")
+```
+VWsample designates patient identity (E01 etc.).
+
+I agree it is important to be happy with the clustering because it changes everything else.  (Fortunately the major findings of HGF and the inflammatory signature appear to be fairly robust in terms of different methods of clustering.)  
+
+As another alternative, I performed batch correction according to "channel" (i.e. cyan1, etc.).  Here are all three umap plots colored by patient:
+
+#### Without alignment
+```{r dev='png', dpi=300, fig.height=4, fig.width=5.5, fig.align='center'}
+previz_noalign
+```
+
+#### Aligned by patient (as done originally)
+```{r dev='png', dpi=300, fig.height=4, fig.width=5.5, fig.align='center'}
+previz_align_patient
+```
+
+#### Aligned by channel (new)
+```{r dev='png', dpi=300, fig.height=4, fig.width=5.5, fig.align='center'}
+previz_align_channel
+```
+
+So I think that the UMAP dimension reduction looks best for the batch correction performed by patient.  
+
+Here are the clusters from the batch corrected data as defined by partitioning method using default settings:
+
+```{r dev='png', dpi=300, fig.height=4, fig.width=5, fig.align='center'}
+cds_cp_plot_aligned
+```
+
+I think the clustering here is reasonable.  You might argue for putting B/PC and dividing cells together, but they have very different top markers, so I think it is fine if they are split up. 
+
+### Question
+
+MHCII+:  I would rather use more comprehensive list of marker genes to define this (and other less studied populations).
+
+Regarding the heatmaps:  Should important or all genes be labelled too so that we can refer to some of them in the text?
+
+### Response
+
+Here is a heatmap with a few selected genes that stand out to me highlighted.  
+
+
+```{r dev='png', dpi=300}
+aligned_partition_heatmap_labeled_select_rows
+```
+
+I think for the MHCII+ cluster, reviewers are going to know what that term means.  For AML experts, using the term HLA-DR might provide a more monosynaptic mental response since this is usually the flow marker we use in phenotyping blasts. Outside of that, maybe you could take a look at the top genes for this cluster in "data_out/partition_markers_aligned.csv".
+
+### Question
+
+What does qc.any == FALSE exactly mean and is removing cells with lower qc recommended by Monocle?
+
+### Response
+
+After applying patient ID information and identifying singlets from your freemuxlet/doublet finder data, I applied some qc analysis tools from the scater package.  
+```
+scater::calculateQCMetrics
+```
+calculates a bunch of qc parameters.  The metrics I used were 1.) total_features_by_counts which was the same as one of the columns in one of your data tables...basically the number of genes expressed. And 2.) Percent mitochondrial genes.  The function 
+```
+scater::isOutlier
+```
+marks cells falling outside 3 MADs in the bad direction as "TRUE" and the rest as "FALSE" in the variables I designated as qc.mito and qc.detected, respectively. Then,
+
+```
+qc.any = qc.detected | qc.mito
+```
+So if FALSE, this indicate the cell passed both qc metrics.  Monocle does not include any qc functions nor does it recommend applying any external qc functions in the tutorial.  I found the scater tools in "Orchestrating Single-Cell Analysis with Bioconductor" although the version of scater they used wouldn't work on my system so I had to use an older version and some of the function calls are slightly different.
+
+### Question
+
+Main dotplot that will be used to define populations: including more (relevant) genes in this dotplot that show strong differences between partitions is good.
+
+### Response
+
+Here is the dotplot with the same genes selected from the heatmap.  I think these are informative and look reasonably good in terms of segregating the partitions.  B/PC and dividing are closely related obviously which I can't provide a reasonable biological explanation for.  This version of the plot includes all of the partitions, unlike the last one which got rid of the non-representative ones.  We can see what works best in the flow of the paper I guess.  
+
+
+```{r dev='png', dpi=300}
+marker_gene_plot
+```
+
+### Question
+
+The pseudotime analysis might shed light on important genes that are changing with time after the treatment.
+
+### Response
+
+Vicki and I played around a lot with pseudotime months ago and it wasn't very illuminating.  I'll do some more exploring within the new clusters we have identified and see if anything useful comes out but will have to defer that to this weekend.
+
+### Question
+
+Regarding UMAP dotplots for HGF expression, I provided some figs showing expression stratified by response and timepoint which we can include in the supplement.  Ravi's comment:  Agreed. But these should be the batch-corrected UMAPs, right?
+
+### Response
+
+I'm not completely sure.  I think you were arguing at one point that the variation we see between samples is biological.  If so, then we should use non-batch-corrected data for expression analysis, which this would be.  However, for the reader it is really a qualitative analysis according to the expression color scale, so I don't feel strongly one way or the other.  I can provide the full unaligned data, the unaligned data excluding non-representative clusters, or the aligned data when we make the final figs.  I think it probably depends on the flow of the paper.
+
+### Question
+
+Regarding HGF expression dotplots:  Isn’t it important to show that T and B cells don’t show differences in HGF expression? And I would perform a statistical test per partition – see below. I am open for further discussion. 
+
+### Response
+
+I think this is reasonable. Unfortunately in the NR group at D42-44 there were a very small number of B cells in absolute terms, but there was a large proportion of these that very strongly expressed HGF.  I think these cells may have been misassigned.  We can either explain this away or use the plot without the B cells.  Here is the plot:
+
+```{r dev='png', dpi=300}
+hgf_dot_plot
+```
+
+### Question
+
+I would perform a differential expression analysis per partition and possibly also per timepoint, to show which partitions (and timepoint) show differences. This will show that only Blasts and MHCII show changes. I would include all partitions in this analysis, just to show that T and B are not affected in AML.
+
+### Response
+
+There are 25 potential comparisons to be made here, involving each of 5 major partitions and 5 timepoints.  The problem with splitting the dataset into 25 individual tests is that at any particular timepoint, there may be an interaction between hgf levels, response and the number of cells in a given partition.  In fact we can see this by doing multivariable regression using tools built into monocle with formula 
+```
+expression~response+aligned_partition
+```
+If you look at the estimates and q values, you can see that in many cases, both response and aligned partition have independent effects on HGF expression. 
+
+```{r, echo=TRUE, results='markup',message=FALSE}
+hgf_monocle_regression2
+
+```
+
+On the contrary, I tried may ways of looking at each of the 25 comparisons in isolation and no test or value I could come up with was congruent with what the figure was showing.  So I think we just need to report the q values from the regression for each of the timepoints.   
+
+### Question
+
+Vicki, the HGF is secreted, right? So, isn’t it relevant that more cells express HGF in NR than in CR, even though the levels of HGF expression seem marginally higher in CR (pg.4 on 20200730 report)? Wouldn’t the total level of secreted HGF be more relevant?
+
+### Response
+
+In exploring the data for the response to the previous question, I made the following figure which plots the log of the sum of normalized counts for each group of cells as the color variable and leaves the size as the proportion of cells expressing:
+
+```{r dev='png', dpi=300}
+hgf_dot_plot_sum
+```
+
+To me it looks similar enough that I don't think it is worth going into.  But yes I agree that the total number of molecules being expressed probably matters in this case.
+
+### Question
+
+I would recommend that you perform differential expression analysis and identify genes that are significantly upregulated in each patient within Blast1 (and other relevant partitions separately if needed) compared to rest of the cells in Blast1. This will again give you MCL1, GATA2, etc. being significantly upregulated in those respective patients, after all those specific clusters before batch-correction were mainly patient specific.
+
+### Response
+
+I did this using the top markers function in monocle.  Within the cells of cluster Blast1, I found the top markers for each patient relative to the rest of cells in Blast 1.  Here we start to drill down into relatively few cells in some of the cases, so we see ribosomal and mitochondrial genes coming up.  I removed them for this analysis and printed out the top markers with q<0.05 in "data_out/blast1_tm_patient_sig.csv"
+
+Lots of the top genes we have been looking at are in there though I'm not sure I understand what this adds, so maybe we can discuss what we want to pull from this.  
+
+### Question
+
+Is this essentially the pseudo-bulk data? Using pseudo-bulk data would be good for comparison with other datasets.
+
+### Response
+
+When I think of pseudobulk analysis this is what I mean:  https://hbctraining.github.io/scRNA-seq/lessons/pseudobulk_DESeq2_scrnaseq.html.  
+
+Unfortunately whenever I run something like this, the PCAs never line up like they should and the clustering looks terrible.  I think there is just too much biological variation in the cell populations we work with (cancer). But maybe I am doing it wrong.
+
+What I refer to as aggregate genes is basically adding up the counts from a set of genes to get a "metagene" or aggregate gene.  Then transforming and plotting this in various ways.  But since I usually treat each cell as an independent measurement, I consider it different from pseudobulk analysis.
+
+I tried this various ways.  I think the most satisfactory way is this:
+
+* 1.) Subset the cell data set to contain the cells and genes you care to examine.  In this case I would use all 3 blast partitions and all genes from module 7.
+* 2.) Extract the raw count matrix from using exprs(cds)
+* 3.) Convert to dense matrix format, group by cell, and take the sum of all gene counts for each cell. 
+* 4.) Fill in any cells missing counts from all genes using a left join
+* 5.) Pivot to wide format and bind onto the end of original raw count matrix.
+* 6.) Create a new cds object using the original cell and gene metadata and the new count matrix containing the aggregate gene.  Importantly I don't recalculate any of the size factors or other metadata, so the aggregate gene doesn't affect these. 
+* 7.) The built in regression tools seem to work with these aggregate genes, although there is still a bug where you can only add 1 aggregate gene to a cell data set.  Not entirely sure what the issue is yet.
+* 8.) The q values can be calculated at each time point and these are probably best applied to the gene module heatmaps. In this case I used the regression formula ~response+aligned_partition.  
+
+Here are the q estimates and q values for module 7:
+
+```{r, echo=TRUE, results='markup',message=FALSE}
+mod7_monocle_regression
+
+```
+
+Here is the gene module heatmap I am talking about. 
+```{r dev='png', dpi=300}
+gene_module_rd
+```
+
+You can make violin plots from the aggregate gene modules too.  Univariate regression (~response) or wilcoxon test will give you P values here which are all very significant but in different directions depending on the day.
+
+
+```{r dev='png', dpi=300}
+mod7_agg_violins
+```
+
+## Conclusion
+
+Let me know if you have any questions or comments.  I'll start to rough out some figures for the scRNA-seq part of the paper this weekend and we can go from there.
+
+Thanks,
+
+Brad
